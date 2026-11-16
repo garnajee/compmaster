@@ -1,0 +1,10 @@
+# Optional: docker compose -f compose.yaml -f compose.registry.yaml up -d --build
+services:
+  compmaster:
+    volumes:
+      - type: bind
+        source: "${DOCKER_CONFIG_DIR:?Set a dedicated DOCKER_CONFIG_DIR in .env}"
+        target: /docker-config
+        read_only: true
+        bind:
+          create_host_path: false

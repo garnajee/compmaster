@@ -1,0 +1,11 @@
+.git
+.env
+data
+target
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+**/*.tsbuildinfo
+.cm-image-*
+rustc-ice-*.txt

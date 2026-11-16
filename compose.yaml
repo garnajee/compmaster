@@ -1,0 +1,40 @@
+name: compmaster
+services:
+  compmaster:
+    build: .
+    image: compmaster:local
+    restart: unless-stopped
+    user: "${COMPMASTER_UID:-65532}:${COMPMASTER_GID:-65532}"
+    group_add:
+      - "${DOCKER_GID:?Run scripts/setup.sh first}"
+      - "65532"
+    ports:
+      - "127.0.0.1:${COMPMASTER_PORT:-8080}:8080"
+    environment:
+      COMPOSE_ROOT: "${COMPOSE_ROOT:?Run scripts/setup.sh first}"
+      COMPMASTER_PUBLIC_ORIGIN: "http://127.0.0.1:${COMPMASTER_PORT:-8080}"
+      COMPMASTER_PROBE_HOST: host.docker.internal
+    volumes:
+      - type: bind
+        source: "${COMPOSE_ROOT}"
+        target: "${COMPOSE_ROOT}"
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${DOCKER_SOCKET}"
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false
+      - compmaster-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    stop_grace_period: 20s
+volumes:
+  compmaster-data:
