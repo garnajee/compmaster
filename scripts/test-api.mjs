@@ -358,5 +358,14 @@ try {
       stdio: "ignore",
     });
   server.kill("SIGTERM");
+  // A successful test must also terminate promptly, even if a subprocess retained a pipe.
+  const exited = await Promise.race([
+    new Promise(resolve => { if (server.exitCode !== null || server.signalCode !== null) resolve(true); else server.once('exit', () => resolve(true)); }),
+    new Promise(resolve => { const timer = setTimeout(() => resolve(false), 10000); timer.unref(); }),
+  ]);
+  if (!exited) server.kill('SIGKILL');
+  server.stdout.destroy();
+  server.stderr.destroy();
+  assert.ok(exited, 'CompMaster did not shut down within 10 seconds');
   console.log(`Test files retained for inspection: ${root}`);
 }

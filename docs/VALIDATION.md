@@ -32,7 +32,7 @@ Si le plugin Compose est installé dans un emplacement non standard, définir `D
 
 L’image doit être construite pour amd64 et arm64, puis vérifiée avec un moteur Linux : UID/GID 65532, commandes Docker/Compose/Buildx exécutables sans shell, système de fichiers racine en lecture seule, volume `/data` inscriptible, socket accessible via son groupe, healthcheck positif.
 
-Les versions de distroless et du CLI sont épinglées par digest d’index multi-architecture. Les mettre à jour délibérément après vérification du registre. Le workflow CI construit une image native et une image multi-architecture ; il effectue également un scan de vulnérabilités. Le scan du code npm peut être lancé avec `npm --prefix frontend audit`.
+Les versions de distroless et du CLI sont épinglées par digest d’index multi-architecture. Les mettre à jour délibérément après vérification du registre. Depuis le correctif du 17 novembre, le workflow construit et teste amd64 et arm64 sur deux runners natifs, puis scanne chaque image avec Trivy. Les plugins sont reconstruits avec les dépendances corrigées détaillées dans [SECURITY.md](SECURITY.md). Le scan du code npm peut être lancé avec `npm --prefix frontend audit`.
 
 ## Points à vérifier sur les machines cibles
 

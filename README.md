@@ -101,7 +101,7 @@ Les tests Docker ignorés par défaut doivent être activés explicitement avec 
 
 L’API versionnée est documentée dans [docs/API.md](docs/API.md). Les limites connues et les vérifications par plateforme sont suivies dans [docs/VALIDATION.md](docs/VALIDATION.md).
 
-Le scan de l’image signale encore deux vulnérabilités HIGH dans les plugins officiels Compose/Buildx, après mise à jour vers le bundle stable observé. Elles sont documentées dans [docs/SECURITY.md](docs/SECURITY.md) et restent bloquantes en CI ; aucune exclusion silencieuse n’a été ajoutée.
+Les plugins Compose/Buildx sont reconstruits depuis leurs tags officiels avec les deux dépendances vulnérables mises à jour. Le procédé est documenté dans [docs/SECURITY.md](docs/SECURITY.md) ; Trivy reste bloquant en CI, sans exclusion de ces vulnérabilités.
 
 ## Licence
 

@@ -21,6 +21,23 @@ RUN mkdir -p /runtime/data/backups && chown -R 65532:65532 /runtime/data \
 
 FROM docker:29.9.3-cli@sha256:5a7af0dcb0e46c803efe9b45371dd21cb500e5b4453250394ac6f06d49b6e6f1 AS docker-cli
 
+# Rebuild the official plugin tags with their vulnerable modules updated.
+# Go's module proxy and checksum database verify both upstream source and dependencies.
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280 AS plugin-builder
+ARG TARGETARCH
+ENV CGO_ENABLED=0 GOOS=linux GOTOOLCHAIN=local
+COPY scripts/build-docker-plugin.sh /usr/local/bin/build-docker-plugin
+
+FROM plugin-builder AS buildx
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    sh /usr/local/bin/build-docker-plugin buildx "$TARGETARCH"
+
+FROM plugin-builder AS compose-plugin
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    sh /usr/local/bin/build-docker-plugin compose "$TARGETARCH"
+
 FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11a9351e782a84b6a45e7f33b6695638c88e3931
 LABEL org.opencontainers.image.title="CompMaster" \
       org.opencontainers.image.description="Local Docker and Compose control panel" \
@@ -28,8 +45,8 @@ LABEL org.opencontainers.image.title="CompMaster" \
 COPY --from=backend /build/compmaster /usr/local/bin/compmaster
 COPY --from=backend --chown=65532:65532 /runtime/ /
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker-cli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
-COPY --from=docker-cli /usr/local/libexec/docker/cli-plugins/docker-buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
+COPY --from=compose-plugin /out/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
+COPY --from=buildx /out/docker-buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
 COPY --from=frontend /build/frontend/dist /app/public
 COPY LICENSE /app/LICENSE
 ENV COMPMASTER_LISTEN=0.0.0.0:8080 \

@@ -1,11 +1,11 @@
 # État des contrôles de sécurité
 
-Contrôles locaux du 15 novembre 2026, sur une image ARM64. Ils décrivent les résultats observés à cette date ; refaire les scans avant une publication.
+Historique initial : contrôles locaux du 15 novembre 2026 sur ARM64. Correctif du 17 novembre 2026 : reconstruction des plugins avec les dépendances corrigées, puis validation par Trivy dans la matrice CI amd64/arm64. Refaire les scans avant une publication.
 
 - Audit npm : zéro vulnérabilité connue dans les dépendances de production après installation du lockfile.
 - Distroless Debian 13 : aucun résultat HIGH/CRITICAL corrigeable signalé par Trivy sur l’image construite.
 - CLI Docker 29.9.3 : aucun résultat HIGH/CRITICAL corrigeable signalé.
-- Compose 5.7.1 et Buildx 0.39.0 : deux résultats HIGH restent présents dans les binaires officiels copiés depuis `docker:29.9.3-cli`.
+- Les binaires officiels Compose 5.7.1 et Buildx 0.39.0 du bundle `docker:29.9.3-cli` contenaient deux résultats HIGH. Ils sont désormais remplacés par les plugins reconstruits ci-dessous.
 
 | Binaire | Dépendance | Résultat Trivy | Version embarquée | Version de dépendance corrigée |
 |---|---|---|---|---|
@@ -14,7 +14,16 @@ Contrôles locaux du 15 novembre 2026, sur une image ARM64. Ils décrivent les r
 
 Les binaires ont été mis à jour depuis le premier bundle Docker 29.7.0, qui produisait davantage de résultats HIGH. Les versions retenues correspondent aux versions stables observées sur les pages officielles [Compose](https://github.com/docker/compose/releases/tag/v5.7.1) et [Buildx](https://github.com/docker/buildx/releases/tag/v0.39.0).
 
-Ces deux résultats ne sont **pas ignorés** et ne sont pas déclarés inapplicables. Le workflow Trivy est volontairement bloquant sur HIGH/CRITICAL corrigeable ; il signalera donc ces dépendances tant que le bundle officiel ne les aura pas mises à jour. Une reconstruction personnalisée des plugins avec des dépendances modifiées nécessiterait une validation distincte de ces logiciels tiers. Ne pas présenter cette image comme exempte de vulnérabilités.
+Ces résultats ne sont **pas ignorés** et ne sont pas déclarés inapplicables. Le workflow Trivy reste bloquant sur HIGH/CRITICAL corrigeable.
+
+## Reconstruction des plugins
+
+Le stage Go de l’image utilise une toolchain officielle épinglée par digest. `scripts/build-docker-plugin.sh` télécharge les tags officiels via le proxy Go et vérifie leurs modules avec `sum.golang.org`, puis construit des binaires Linux statiques :
+
+- Buildx `v0.39.0-compmaster.1` : tag `v0.39.0`, avec `github.com/moby/go-archive v0.3.3`.
+- Compose `v5.7.2-compmaster.1` : tag `v5.7.2`, avec `golang.org/x/net v0.62.0`.
+
+Les autres dépendances proviennent des graphes de modules amont, avec la résolution minimale Go. Les scripts vérifient dans les métadonnées de chaque binaire que la version corrigée est effectivement liée. La toolchain et les sources Go restent dans les stages de build ; l’image finale conserve distroless, le CLI Docker officiel et les deux plugins statiques. Les tests d’image effectuent un vrai build/up/down Compose sous UID 65532 puis sous l’UID hôte, avant le scan sur chaque architecture native.
 
 La surface d’administration reste locale : publication sur 127.0.0.1, Host/Origin contrôlés, CSRF obligatoire, pas de CORS, processus non-root, rootfs en lecture seule, capacités supprimées et `no-new-privileges`. Ces mesures ne réduisent pas les pouvoirs de l’API Docker accessible via le socket. Les projets et les utilisateurs autorisés à piloter ce moteur doivent rester de confiance.
 
