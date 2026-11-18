@@ -19,7 +19,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: cargo fmt --check && cargo test
       - run: npm --prefix frontend ci && npm --prefix frontend test && npm --prefix frontend run build
-      - run: npm --prefix frontend audit --audit-level=high
+      - run: node --test scripts/audit-frontend.test.mjs && node scripts/audit-frontend.mjs
       - run: cd frontend && npx playwright install --with-deps chromium && npm run test:e2e
       - run: cargo build
       - name: Docker API integration

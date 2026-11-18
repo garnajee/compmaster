@@ -1,5 +1,13 @@
 # État des contrôles de sécurité
 
+## Exception temporaire des outils frontend (18 novembre 2026)
+
+L’avis [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf), mis à jour le 17 novembre, couvre `picomatch` jusqu’à 4.0.7 et ne dispose actuellement d’aucun correctif publié. Il concerne ici exclusivement Vite/Vitest et leurs dépendances de développement. Les motifs glob proviennent du dépôt de confiance ; aucun motif fourni par les utilisateurs de CompMaster n’est envoyé à ces outils. Node.js et ces dépendances ne sont pas copiés dans l’image finale.
+
+`scripts/audit-frontend.mjs` conserve le blocage HIGH/CRITICAL, avec une exception pour ce seul avis et ses résultats dérivés, uniquement si chaque nœud concerné est marqué `dev` dans le lockfile. Une dépendance de production, un autre avis, un rapport invalide ou l’expiration de l’exception le **18 décembre 2026** fait échouer le contrôle. Des tests vérifient ces restrictions. Retirer l’exception dès qu’un correctif amont est disponible ; ne pas prolonger sans réexamen. Trivy reste inchangé et bloquant pour les deux images finales.
+
+## Historique des images
+
 Historique initial : contrôles locaux du 15 novembre 2026 sur ARM64. Correctif du 17 novembre 2026 : reconstruction des plugins avec les dépendances corrigées, puis validation par Trivy dans la matrice CI amd64/arm64. Refaire les scans avant une publication.
 
 - Audit npm : zéro vulnérabilité connue dans les dépendances de production après installation du lockfile.
