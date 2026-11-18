@@ -1,8 +1,7 @@
 name: compmaster
 services:
   compmaster:
-    build: .
-    image: compmaster:local
+    image: "${COMPMASTER_IMAGE:-ghcr.io/garnajee/compmaster:latest}"
     restart: unless-stopped
     user: "${COMPMASTER_UID:-65532}:${COMPMASTER_GID:-65532}"
     group_add:

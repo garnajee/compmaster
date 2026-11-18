@@ -1,7 +1,8 @@
 name: checks
 on:
-  push:
   pull_request:
+  workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:
@@ -58,6 +59,9 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: compmaster:ci
           load: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha,scope=image-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=image-${{ matrix.arch }}
       - run: docker run --rm --entrypoint /usr/local/bin/docker compmaster:ci compose version
@@ -71,3 +75,12 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '1'
           ignore-unfixed: true
+      - name: Export validated image
+        run: docker save --output "$RUNNER_TEMP/compmaster-${{ matrix.arch }}.tar" compmaster:ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compmaster-image-${{ matrix.arch }}
+          path: ${{ runner.temp }}/compmaster-${{ matrix.arch }}.tar
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error

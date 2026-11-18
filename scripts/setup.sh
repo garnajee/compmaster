@@ -51,5 +51,5 @@ umask 077
   printf 'COMPMASTER_UID=%s\n' "$task_uid"
   printf 'COMPMASTER_GID=%s\n' "$task_user_gid"
 } > "$task_env"
-printf '\nConfiguration créée : %s\nLancez : bash scripts/compose.sh up -d --build\nPuis : http://127.0.0.1:%s\n' "$task_env" "$task_port"
+printf '\nConfiguration créée : %s\nLancez : bash scripts/compose.sh pull && bash scripts/compose.sh up -d\nPuis : http://127.0.0.1:%s\n' "$task_env" "$task_port"
 echo 'Le dossier sera monté en lecture-écriture. Les chemins extérieurs à cette racine nécessaires aux projets doivent être montés explicitement.'

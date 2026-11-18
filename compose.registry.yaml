@@ -1,4 +1,4 @@
-# Optional: docker compose -f compose.yaml -f compose.registry.yaml up -d --build
+# Optional: bash scripts/compose.sh -f compose.yaml -f compose.registry.yaml up -d
 services:
   compmaster:
     volumes:
